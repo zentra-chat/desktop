@@ -71,3 +71,25 @@ cd ..
 git add frontend
 git commit -m "Update frontend submodule"
 ```
+## Releases
+
+### Automatic Releases
+
+The desktop app uses GitHub Actions to automatically build and release for all platforms:
+
+- **Linux** (AppImage, deb)
+- **macOS** (Intel & Apple Silicon)
+- **Windows** (MSI, NSIS installer)
+
+To create a release:
+
+```bash
+# Tag the release
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The GitHub Action will automatically:
+1. Build for all platforms
+2. Create a GitHub release
+3. Upload the installers as release assets
