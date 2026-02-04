@@ -62,15 +62,6 @@ jobs:
           ln -sf frontend/src src
           ln -sf frontend/static static
 
-      - name: Install workspace dependencies (root)
-        run: pnpm -w install --no-frozen-lockfile
-
-      - name: Install frontend dependencies (explicit)
-        run: pnpm -C frontend install --no-frozen-lockfile
-
-      - name: Build frontend (sanity check)
-        run: pnpm -C frontend build --if-present --no-frozen-lockfile
-
       - name: Build and release
         uses: tauri-apps/tauri-action@v0
         env:
