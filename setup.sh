@@ -18,7 +18,7 @@ if [ ! -f "frontend/.git" ]; then
     echo "Initializing frontend submodule..."
     git submodule update --init --recursive
 else
-    echo "✓ Frontend submodule already initialized"
+    echo "Frontend submodule already initialized"
 fi
 
 # Create symlinks
