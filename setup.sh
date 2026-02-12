@@ -23,8 +23,8 @@ fi
 
 # Create symlinks
 echo "Creating symlinks..."
-ln -sf frontend/src src
-ln -sf frontend/static static
+ln -snf frontend/src src
+ln -snf frontend/static static
 echo "Symlinks created"
 
 # Install dependencies
