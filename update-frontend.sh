@@ -27,7 +27,7 @@ git add "$SUBMODULE"
 
 # Commit only if pointer changed
 if ! git diff --cached --quiet; then
-    git commit -m "Update $SUBMODULE submodule to latest version"
+    git commit -m "chore: Update $SUBMODULE submodule to latest version"
     echo "Submodule updated and committed."
 else
     echo "Submodule already up to date."
