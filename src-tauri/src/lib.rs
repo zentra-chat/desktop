@@ -16,11 +16,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .setup(move |app| {
-            // Remove native decorations (custom titlebar)
-            if let Some(main_window) = app.get_webview_window("main") {
-                main_window.set_decorations(false)?;
-            }
-
             // --- System tray ---
             let show_item = MenuItem::with_id(app, "show", "Open Zentra", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
