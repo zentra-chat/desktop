@@ -2,6 +2,32 @@
 
 Desktop application for Zentra built with Tauri.
 
+## Download
+
+### Direct Download (GitHub Releases)
+
+Download the latest desktop builds from:
+
+https://github.com/zentra-chat/zentra-desktop/releases/latest
+
+Choose the installer/package for your platform:
+
+- **Linux:** `.AppImage` or `.deb`
+- **macOS:** `.dmg`
+- **Windows:** `.msi` or `.exe`
+
+### Linux Options
+
+On Linux, you can either:
+
+- Download directly from GitHub Releases (AppImage/deb):
+	https://github.com/zentra-chat/zentra-desktop/releases/latest
+- Install from AUR:
+
+```bash
+yay -S zentra-desktop-bin
+```
+
 ## Architecture
 
 This desktop app uses **git submodules** to import the main frontend codebase, making it so that we only maintain one version of the frontend for both web and desktop.
