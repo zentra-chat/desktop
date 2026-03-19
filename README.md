@@ -8,7 +8,7 @@ Desktop application for Zentra built with Tauri.
 
 Download the latest desktop builds from:
 
-https://github.com/zentra-chat/zentra-desktop/releases/latest
+https://github.com/zentra-chat/desktop/releases/latest
 
 Choose the installer/package for your platform:
 
@@ -21,7 +21,7 @@ Choose the installer/package for your platform:
 On Linux, you can either:
 
 - Download directly from GitHub Releases (AppImage/deb):
-	https://github.com/zentra-chat/zentra-desktop/releases/latest
+	https://github.com/zentra-chat/desktop/releases/latest
 - Install from AUR:
 
 ```bash
@@ -38,7 +38,7 @@ This desktop app uses **git submodules** to import the main frontend codebase, m
 
 ```bash
 # Clone the repository with submodules
-git clone --recursive https://github.com/zentra-chat/zentra-desktop.git
+git clone --recursive https://github.com/zentra-chat/desktop.git
 cd zentra-desktop
 
 # Run the setup script
