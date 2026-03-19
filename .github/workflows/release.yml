@@ -69,6 +69,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLIC_DEFAULT_INSTANCE_URL: ${{ vars.PUBLIC_DEFAULT_INSTANCE_URL }}
+          PUBLIC_DEFAULT_INSTANCE_NAME: ${{ vars.PUBLIC_DEFAULT_INSTANCE_NAME }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Zentra Desktop ${{ github.ref_name }}'
