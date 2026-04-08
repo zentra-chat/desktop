@@ -1,0 +1,68 @@
+name: Sync Frontend Submodule
+
+on:
+  repository_dispatch:
+    types: [frontend-updated]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-frontend-submodule
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout desktop repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update frontend submodule to latest main
+        id: sync
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git submodule sync --recursive
+          git submodule update --init --recursive frontend
+
+          git -C frontend fetch origin main
+          current_sha="$(git -C frontend rev-parse HEAD)"
+          latest_sha="$(git -C frontend rev-parse origin/main)"
+
+          echo "current_sha=$current_sha" >> "$GITHUB_OUTPUT"
+          echo "latest_sha=$latest_sha" >> "$GITHUB_OUTPUT"
+
+          if [[ "$current_sha" == "$latest_sha" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Keep the submodule pinned to the latest frontend main commit.
+          git -C frontend checkout --detach "$latest_sha"
+          git add frontend
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push submodule update
+        if: steps.sync.outputs.changed == 'true'
+        shell: bash
+        env:
+          FRONTEND_SHA: ${{ github.event.client_payload.frontend_sha }}
+          LATEST_SHA: ${{ steps.sync.outputs.latest_sha }}
+        run: |
+          set -euo pipefail
+
+          source_sha="${FRONTEND_SHA:-$LATEST_SHA}"
+          short_sha="${source_sha:0:12}"
+
+          git commit -m "chore: sync frontend submodule to ${short_sha}"
+          git push
