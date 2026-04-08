@@ -85,7 +85,11 @@ The built application will be in `src-tauri/target/release/`.
 
 ## Updating the Frontend
 
-Since the frontend is a git submodule, you can update it like this:
+This repository supports automatic frontend sync through GitHub Actions.
+
+On every push to the frontend `main` branch, the frontend repo dispatches an event to this desktop repo. The desktop workflow then updates the `frontend` submodule pointer to the latest `main` commit and pushes that change.
+
+If needed, you can still sync manually:
 
 ```bash
 # Pull latest changes from frontend
