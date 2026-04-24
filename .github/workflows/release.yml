@@ -71,7 +71,7 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Get version from tag
+- name: Get version from tag
         run: |
           raw_version="${GITHUB_REF#refs/tags/v}"
           is_dev="false"
@@ -80,9 +80,20 @@ jobs:
             raw_version="${raw_version%-dev}"
           fi
           
-          # Use + instead of -: YYYY.MM.DD+HHMM as build metadata
-          semver="${raw_version}"
-          semver="${semver/./+}"
+          # Parse YYYY.MM.DD.HHMM -> semver: YYYY.MM.DD-HHMM (strip leading zeros from HHMM only)
+          y="${raw_version%%.*}"
+          rest="${raw_version#*.}"
+          m="${rest%%.*}"
+          pd="${rest#*.}"
+          
+          # Remove leading zeros
+          m=$((10#$m))
+          day="${pd%%.*}"
+          hm="${pd#*.}"
+          hm=$((10#$hm))
+          
+          # Use DD-HHMM as prerelease (semver allows alphanumerics there)
+          semver="${y}.${m}.${day}-${hm}"
           
           if [[ "$is_dev" == "true" ]]; then
             semver="${semver}-dev"
