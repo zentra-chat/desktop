@@ -80,10 +80,13 @@ jobs:
             raw_version="${raw_version%-dev}"
           fi
           
-          IFS='.' read -r y m d hm <<< "$raw_version"
-          m=$((10#$m))
-          d=$((10#$d))
-          hm=$((10#$hm))
+          # Extract parts preserving leading zeros
+          y="${raw_version%%.*}"
+          rest="${raw_version#*.}"
+          m="${rest%%.*}"
+          rest="${rest#*.}"
+          d="${rest%%.*}"
+          hm="${rest}"
           
           if [[ "$is_dev" == "true" ]]; then
             semver="${y}.${m}.${d}-dev.${hm}"
