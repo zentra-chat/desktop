@@ -71,7 +71,7 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Get version from tag
+- name: Get version from tag
         run: |
           raw_version="${GITHUB_REF#refs/tags/v}"
           is_dev="false"
@@ -80,18 +80,18 @@ jobs:
             raw_version="${raw_version%-dev}"
           fi
           
-          # Extract parts preserving leading zeros
-          y="${raw_version%%.*}"
-          rest="${raw_version#*.}"
-          m="${rest%%.*}"
-          rest="${rest#*.}"
-          d="${rest%%.*}"
-          hm="${rest}"
+          # Format: YYYY.MM.DD.HHMM -> YYYY.MM.DHHMM (3 parts)
+          y="${raw_version%%.*}"  # YYYY
+          rest="${raw_version#*.}"  # MM.DD.HHMM  
+          m="${rest%%.*}"         # MM
+          pd="${rest#*.}"        # DD.HHMM
+          pd="${pd//./}"        # DDHOMM (remove all dots)
           
+          # Semver: major.minor.patch
           if [[ "$is_dev" == "true" ]]; then
-            semver="${y}.${m}.${d}-dev.${hm}"
+            semver="${y}.${m}.${pd}-dev"
           else
-            semver="${y}.${m}.${d}.${hm}"
+            semver="${y}.${m}.${pd}"
           fi
           
           echo "VERSION=$raw_version" >> $GITHUB_ENV
