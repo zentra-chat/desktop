@@ -95,7 +95,7 @@ jobs:
             semver="${semver}-dev"
           fi
           
-          echo "VERSION=$raw_version" >> $GITHUB_ENV
+          echo "VERSION=$semver" >> $GITHUB_ENV
           echo "SEMVER=$semver" >> $GITHUB_ENV
 
       - name: Update version in tauri.conf.json
