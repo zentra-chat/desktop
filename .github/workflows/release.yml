@@ -2,12 +2,74 @@ name: Release Desktop App
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
-  workflow_dispatch:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  version:
+    if: startsWith(github.ref, 'refs/heads/')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_release: ${{ steps.version.outputs.is_release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate version
+        id: version
+        run: |
+          set -euo pipefail
+
+          branch="${GITHUB_REF#refs/heads/}"
+          is_dev="false"
+          if [[ "$branch" == "develop" ]]; then
+            is_dev="true"
+          fi
+
+          timestamp="$(git log -1 --format='%ct' HEAD)"
+          version_date="$(date -u -d "@$timestamp" '+%Y.%m.%d.%H%M')"
+
+          if [[ "$is_dev" == "true" ]]; then
+            version="${version_date}-dev"
+          else
+            version="$version_date"
+          fi
+
+          tag="v$version"
+          echo "version=$version"
+          echo "is_release=true"
+
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists, skipping release"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "is_release=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push version tag
+        if: steps.version.outputs.is_release == 'true'
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          tag="v$version"
+
+          git tag -a "$tag" -m "Release $version"
+          git push origin "$tag"
+
   release:
+    needs: version
+    if: needs.version.outputs.is_release == 'true'
     permissions:
       contents: write
     strategy:
@@ -65,15 +127,23 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Update version in tauri.conf.json
+        run: |
+          version="${{ needs.version.outputs.version }}"
+          jq ".version = \"$version\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+
       - name: Build and release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUBLIC_DEFAULT_INSTANCE_URL: ${{ vars.PUBLIC_DEFAULT_INSTANCE_URL }}
           PUBLIC_DEFAULT_INSTANCE_NAME: ${{ vars.PUBLIC_DEFAULT_INSTANCE_NAME }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Zentra Desktop ${{ github.ref_name }}'
+          tagName: v${{ needs.version.outputs.version }}
+          releaseName: 'Zentra Desktop ${{ needs.version.outputs.version }}'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: false
           prerelease: false

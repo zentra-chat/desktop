@@ -1,15 +1,23 @@
-name: Sync Frontend Submodule
+name: Sync Web Submodule
 
 on:
+  push:
+    branches: [main, develop]
   repository_dispatch:
-    types: [frontend-updated]
+    types: [web-updated]
   workflow_dispatch:
+    inputs:
+      web_ref:
+        type: string
+        description: 'Web branch to sync (main or develop)'
+        required: false
+        default: 'main'
 
 permissions:
   contents: write
 
 concurrency:
-  group: sync-frontend-submodule
+  group: sync-web
   cancel-in-progress: true
 
 jobs:
@@ -20,24 +28,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Configure git identity
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Update frontend submodule to latest main
+      - name: Update web submodule to match branch
         id: sync
         shell: bash
         run: |
           set -euo pipefail
 
+          if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            branch="${{ github.event.client_payload.web_ref }}"
+          elif [[ -n "${{ inputs.web_ref }}" ]]; then
+            branch="${{ inputs.web_ref }}"
+          else
+            branch="${GITHUB_REF#refs/heads/}"
+          fi
+
+          echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
+
           git submodule sync --recursive
           git submodule update --init --recursive frontend
 
-          git -C frontend fetch origin main
+          git -C frontend fetch origin "$branch"
           current_sha="$(git -C frontend rev-parse HEAD)"
-          latest_sha="$(git -C frontend rev-parse origin/main)"
+          latest_sha="$(git -C frontend rev-parse "origin/$branch")"
 
           echo "current_sha=$current_sha" >> "$GITHUB_OUTPUT"
           echo "latest_sha=$latest_sha" >> "$GITHUB_OUTPUT"
@@ -47,7 +66,6 @@ jobs:
             exit 0
           fi
 
-          # Keep the submodule pinned to the latest frontend main commit.
           git -C frontend checkout --detach "$latest_sha"
           git add frontend
           echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -55,14 +73,12 @@ jobs:
       - name: Commit and push submodule update
         if: steps.sync.outputs.changed == 'true'
         shell: bash
-        env:
-          FRONTEND_SHA: ${{ github.event.client_payload.frontend_sha }}
-          LATEST_SHA: ${{ steps.sync.outputs.latest_sha }}
         run: |
           set -euo pipefail
 
-          source_sha="${FRONTEND_SHA:-$LATEST_SHA}"
-          short_sha="${source_sha:0:12}"
+          branch="${{ steps.sync.outputs.target_branch }}"
+          sha="${{ steps.sync.outputs.latest_sha }}"
+          short_sha="${sha:0:12}"
 
-          git commit -m "chore: sync frontend submodule to ${short_sha}"
+          git commit -m "chore: sync web submodule to ${short_sha} ($branch)"
           git push
