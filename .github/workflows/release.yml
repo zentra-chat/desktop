@@ -72,6 +72,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Get version from tag
+        shell: bash
         run: |
           raw_version="${GITHUB_REF#refs/tags/v}"  # 2026.04.24.0150
 
@@ -98,6 +99,7 @@ jobs:
           echo "SEMVER=$semver" >> $GITHUB_ENV
 
       - name: Update version in tauri.conf.json
+        shell: bash
         run: |
           echo "Current version:"
           grep version src-tauri/tauri.conf.json
