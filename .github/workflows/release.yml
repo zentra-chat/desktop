@@ -73,12 +73,30 @@ jobs:
 
       - name: Get version from tag
         run: |
-          version="${GITHUB_REF#refs/tags/v}"
-          echo "VERSION=$version" >> $GITHUB_ENV
+          raw_version="${GITHUB_REF#refs/tags/v}"
+          is_dev="false"
+          if [[ "$raw_version" == *-dev ]]; then
+            is_dev="true"
+            raw_version="${raw_version%-dev}"
+          fi
+          
+          IFS='.' read -r y m d hm <<< "$raw_version"
+          m=$((10#$m))
+          d=$((10#$d))
+          hm=$((10#$hm))
+          
+          if [[ "$is_dev" == "true" ]]; then
+            semver="${y}.${m}.${d}-dev.${hm}"
+          else
+            semver="${y}.${m}.${d}.${hm}"
+          fi
+          
+          echo "VERSION=$raw_version" >> $GITHUB_ENV
+          echo "SEMVER=$semver" >> $GITHUB_ENV
 
       - name: Update version in tauri.conf.json
         run: |
-          jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          jq ".version = \"$SEMVER\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
           mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
       - name: Build and release
