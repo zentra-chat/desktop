@@ -71,7 +71,7 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --no-frozen-lockfile
 
-- name: Get version from tag
+      - name: Get version from tag
         run: |
           raw_version="${GITHUB_REF#refs/tags/v}"
           is_dev="false"
