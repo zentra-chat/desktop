@@ -80,14 +80,13 @@ jobs:
             raw_version="${raw_version%-dev}"
           fi
           
-          # Format: YYYY.MM.DD.HHMM -> YYYY.MM.DHHMM (3 parts)
+          # Format: YYYY.MM.DD.HHMM -> semver: YYYY.MM.DD-HHMM with prerelease
           y="${raw_version%%.*}"  # YYYY
           rest="${raw_version#*.}"  # MM.DD.HHMM  
           m="${rest%%.*}"         # MM
           pd="${rest#*.}"        # DD.HHMM
-          pd="${pd//./}"        # DDHOMM (remove all dots)
           
-          # Semver: major.minor.patch
+          # Semver: major.minor.patch-prerelease
           if [[ "$is_dev" == "true" ]]; then
             semver="${y}.${m}.${pd}-dev"
           else
