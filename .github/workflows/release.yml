@@ -3,8 +3,9 @@ name: Release Desktop App
 on:
   push:
     branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+  push:
+    tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,24 +15,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  version:
+  tag:
     if: startsWith(github.ref, 'refs/heads/')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      is_release: ${{ steps.version.outputs.is_release }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Configure git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Generate version
+      - name: Generate version and tag
         id: version
         run: |
           set -euo pipefail
@@ -51,30 +46,26 @@ jobs:
             version="$version_date"
           fi
 
-          tag="v$version"
-          echo "version=$version"
-          echo "is_release=true"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_ENV"
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push tag
+        run: |
+          tag="v$VERSION"
           if git rev-parse "$tag" >/dev/null 2>&1; then
-            echo "Tag $tag already exists, skipping release"
-            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "Tag $tag already exists"
             exit 0
           fi
-
-          echo "is_release=true" >> "$GITHUB_OUTPUT"
-
-      - name: Create and push version tag
-        if: steps.version.outputs.is_release == 'true'
-        run: |
-          version="${{ steps.version.outputs.version }}"
-          tag="v$version"
-
-          git tag -a "$tag" -m "Release $version"
+          git tag -a "$tag" -m "Release $VERSION"
           git push origin "$tag"
 
   release:
-    needs: version
-    if: needs.version.outputs.is_release == 'true'
+    if: "!startsWith(github.ref, 'refs/heads/')"
     permissions:
       contents: write
     strategy:
@@ -96,6 +87,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Fetch all tags
+        run: git fetch --tags origin
 
       - name: Install dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -124,7 +118,6 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: Create symlinks
-        shell: bash
         run: |
           ln -sf frontend/src src
           ln -sf frontend/static static
@@ -132,10 +125,14 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Get version from tag
+        run: |
+          version="${GITHUB_REF#refs/tags/v}"
+          echo "VERSION=$version" >> $GITHUB_ENV
+
       - name: Update version in tauri.conf.json
         run: |
-          version="${{ needs.version.outputs.version }}"
-          jq ".version = \"$version\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
           mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
       - name: Build and release
@@ -147,9 +144,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: v${{ needs.version.outputs.version }}
-          releaseName: 'Zentra Desktop ${{ needs.version.outputs.version }}'
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Zentra Desktop ${{ env.VERSION }}'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: false
-          prerelease: false
+          prerelease: ${{ contains(env.VERSION, '-dev') && 'true' || 'false' }}
           args: ${{ matrix.args }}
