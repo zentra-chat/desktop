@@ -65,7 +65,7 @@ jobs:
           git push origin "$tag"
 
   release:
-    if: "!startsWith(github.ref, 'refs/heads/')"
+    if: "startsWith(github.ref, 'refs/tags/v')"
     permissions:
       contents: write
     strategy:
