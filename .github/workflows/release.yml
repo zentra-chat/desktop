@@ -3,7 +3,6 @@ name: Release Desktop App
 on:
   push:
     branches: [main, develop]
-  push:
     tags: ['v*']
   workflow_dispatch:
 
