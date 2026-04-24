@@ -71,34 +71,29 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --no-frozen-lockfile
 
-- name: Get version from tag
+      - name: Get version from tag
         run: |
-          raw_version="${GITHUB_REF#refs/tags/v}"
+          raw_version="${GITHUB_REF#refs/tags/v}"  # 2026.04.24.0150
+
           is_dev="false"
           if [[ "$raw_version" == *-dev ]]; then
             is_dev="true"
             raw_version="${raw_version%-dev}"
           fi
-          
-          # Parse YYYY.MM.DD.HHMM -> semver: YYYY.MM.DD-HHMM (strip leading zeros from HHMM only)
-          y="${raw_version%%.*}"
-          rest="${raw_version#*.}"
-          m="${rest%%.*}"
-          pd="${rest#*.}"
-          
-          # Remove leading zeros
-          m=$((10#$m))
-          day="${pd%%.*}"
-          hm="${pd#*.}"
-          hm=$((10#$hm))
-          
-          # Use DD-HHMM as prerelease (semver allows alphanumerics there)
-          semver="${y}.${m}.${day}-${hm}"
-          
+
+          y="${raw_version%%.*}"           # 2026
+          rest="${raw_version#*.}"         # 04.24.0150
+          m=$((10#${rest%%.*}))            # 4  (strips leading zero)
+          rest2="${rest#*.}"               # 24.0150
+          d="${rest2%%.*}"                 # 24
+          build="${rest2#*.}"              # 0150
+
+          semver="${y}.${m}.${d}+${build}" # 2026.4.24+0150
+
           if [[ "$is_dev" == "true" ]]; then
-            semver="${semver}-dev"
+            semver="${semver}-dev" # not valid semver but handle if needed
           fi
-          
+
           echo "VERSION=$semver" >> $GITHUB_ENV
           echo "SEMVER=$semver" >> $GITHUB_ENV
 
