@@ -80,16 +80,9 @@ jobs:
             raw_version="${raw_version%-dev}"
           fi
           
-          # Format: YYYY.MM.DD.HHMM -> semver: YYYY.M.DD-HHMM
-          # Use hyphen to put DD.HHMM as prerelease to avoid leading zero issues
-          y="${raw_version%%.*}"  # YYYY
-          rest="${raw_version#*.}"  # MM.DD.HHMM  
-          m="${rest%%.*}"         # MM
-          m=$((10#$m))          # Remove leading zero
-          patch="${rest#*.}"      # DD.HHMM -> DD-HHMM as prerelease
-          patch="${patch//./-}"   # Replace . with -
-          
-          semver="${y}.${m}.${patch}"
+          # Use + instead of -: YYYY.MM.DD+HHMM as build metadata
+          semver="${raw_version}"
+          semver="${semver/./+}"
           
           if [[ "$is_dev" == "true" ]]; then
             semver="${semver}-dev"
@@ -100,7 +93,11 @@ jobs:
 
       - name: Update version in tauri.conf.json
         run: |
+          echo "Current version:"
+          grep version src-tauri/tauri.conf.json
+          echo "SEMVER is: $SEMVER"
           jq ".version = \"$SEMVER\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          cat src-tauri/tauri.conf.json.tmp
           mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
       - name: Build and release
