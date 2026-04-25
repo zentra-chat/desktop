@@ -89,24 +89,36 @@ jobs:
           d="${rest2%%.*}"                 # 24
           build="${rest2#*.}"              # 0150
 
-          semver="${y}.${m}.${d}+${build}" # 2026.4.24+0150
+          normal="${y}.${m}.${d}+${build}" # 2026.4.24+0150
 
-          # Removing this for right now since it isn't valid semver and MSI on windows is throwing a hissy fit, ill figure out a better solution for dev builds later
-          # if [[ "$is_dev" == "true" ]]; then
-          #   semver="${semver}-dev" # not valid semver but handle if needed
-          # fi
+          if [[ "$is_dev" == "true" ]]; then
+            normal="${normal}-dev"
+          fi
 
-          echo "VERSION=$semver" >> $GITHUB_ENV
-          echo "SEMVER=$semver" >> $GITHUB_ENV
+          msi_y=$((y > 255 ? y % 100 : y))
+          msi_m=$((m > 255 ? 255 : m))
+          msi_d=$((d > 255 ? 255 : d))
+          msi_build=$((build > 65535 ? 65535 : build))
+          msi="${msi_y}.${msi_m}.${msi_d}+${msi_build}"
 
-      - name: Update version in tauri.conf.json
+          if [[ "$is_dev" == "true" ]]; then
+            msi="${msi}-dev"
+          fi
+
+          echo "VERSION=$normal" >> $GITHUB_ENV
+          echo "SEMVER=$normal" >> $GITHUB_ENV
+          echo "MSI_VERSION=$msi" >> $GITHUB_ENV
+
+      - name: Update version in tauri.conf.json (Windows uses MSI-safe version)
         shell: bash
         run: |
-          echo "Current version:"
-          grep version src-tauri/tauri.conf.json
-          echo "SEMVER is: $SEMVER"
-          jq ".version = \"$SEMVER\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
-          cat src-tauri/tauri.conf.json.tmp
+          if [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+            echo "Using MSI-safe version for Windows: $MSI_VERSION"
+            jq ".version = \"$MSI_VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          else
+            echo "Using normal version: $SEMVER"
+            jq ".version = \"$SEMVER\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          fi
           mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
       - name: Build and release
