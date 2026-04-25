@@ -91,9 +91,10 @@ jobs:
 
           semver="${y}.${m}.${d}+${build}" # 2026.4.24+0150
 
-          if [[ "$is_dev" == "true" ]]; then
-            semver="${semver}-dev" # not valid semver but handle if needed
-          fi
+          # Removing this for right now since it isn't valid semver and MSI on windows is throwing a hissy fit, ill figure out a better solution for dev builds later
+          # if [[ "$is_dev" == "true" ]]; then
+          #   semver="${semver}-dev" # not valid semver but handle if needed
+          # fi
 
           echo "VERSION=$semver" >> $GITHUB_ENV
           echo "SEMVER=$semver" >> $GITHUB_ENV
