@@ -27,7 +27,7 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 
 	optimizeDeps: {
-		include: ['@emoji-mart/data']
+		include: ['@emoji-mart/data', 'markdown-it']
 	},
 
 	resolve: {
