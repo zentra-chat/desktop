@@ -101,10 +101,6 @@ jobs:
           msi_build=$((build > 65535 ? 65535 : build))
           msi="${msi_y}.${msi_m}.${msi_d}+${msi_build}"
 
-          if [[ "$is_dev" == "true" ]]; then
-            msi="${msi}-dev"
-          fi
-
           echo "VERSION=$normal" >> $GITHUB_ENV
           echo "SEMVER=$normal" >> $GITHUB_ENV
           echo "MSI_VERSION=$msi" >> $GITHUB_ENV
