@@ -21,10 +21,14 @@ const pluginSdkAlias = useLocalPluginSdk
 			'@zentra/plugin-sdk': '@zentra-chat/plugin-sdk'
 		};
 
-const fsAllow = useLocalPluginSdk ? ['..', localPluginSdkRoot] : ['..'];
+const fsAllow = useLocalPluginSdk ? ['.', '..', localPluginSdkRoot] : ['.', '..'];
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+
+	optimizeDeps: {
+		include: ['@emoji-mart/data', 'markdown-it']
+	},
 
 	resolve: {
 		alias: {

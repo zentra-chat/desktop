@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@emoji-mart/data':
+        specifier: ^1.2.1
+        version: 1.2.1
       '@tauri-apps/api':
         specifier: ^2.10.1
         version: 2.10.1
@@ -23,6 +26,9 @@ importers:
       lucide-svelte:
         specifier: ^0.563.0
         version: 0.563.0(svelte@5.49.1)
+      markdown-it:
+        specifier: ^14.0.0
+        version: 14.1.1
       selenite:
         specifier: workspace:*
         version: link:frontend
