@@ -19,6 +19,7 @@
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-notification": "^2.3.3",
     "date-fns": "^4.1.0",
+    "highlight.js": "^11.11.1",
     "lucide-svelte": "^0.563.0",
     "markdown-it": "^14.0.0",
     "markdown-it-ins": "^4.0.0",
