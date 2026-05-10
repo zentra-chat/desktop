@@ -63,6 +63,7 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          add-rust-environment-hash-key: false
 
       - name: Create symlinks
         run: |
