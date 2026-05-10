@@ -9,9 +9,9 @@ on:
     inputs:
       web_ref:
         type: string
-        description: 'Web branch to sync (main or develop)'
+        description: "Web branch to sync (main or develop)"
         required: false
-        default: 'main'
+        default: "main"
 
 permissions:
   contents: write
