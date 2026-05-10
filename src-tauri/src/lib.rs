@@ -1,9 +1,8 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use tauri::Manager;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    WindowEvent,
+    RunEvent, WindowEvent,
 };
 
 #[tauri::command]
@@ -72,6 +71,16 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    app.run(|app_handle, event| match event {
+        RunEvent::SingleInstance { .. } => {
+            if let Some(window) = app_handle.get_webview_window("main") {
+                window.show().ok();
+                window.set_focus().ok();
+            }
+        }
+        _ => {}
+    });
 }
