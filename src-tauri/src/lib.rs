@@ -12,7 +12,7 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .setup(move |app| {
@@ -75,7 +75,7 @@ pub fn run() {
         .expect("error while building tauri application");
 
     app.run(|app_handle, event| match event {
-        RunEvent::SingleInstance { .. } => {
+        RunEvent::Resumed => {
             if let Some(window) = app_handle.get_webview_window("main") {
                 window.show().ok();
                 window.set_focus().ok();
