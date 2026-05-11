@@ -16,10 +16,10 @@ pub fn run() {
         // Register single-instance plugin FIRST so secondary instances
         // are caught before any other plugin runs.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            let _ = app
-                .get_webview_window("main")
-                .expect("no main window")
-                .set_focus();
+            if let Some(win) = app.get_webview_window("main") {
+                win.show().ok();
+                win.set_focus().ok();
+            }
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
